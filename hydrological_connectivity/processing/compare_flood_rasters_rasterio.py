@@ -10,11 +10,12 @@ from rasterio.windows import from_bounds
 class CompareFloodRastersRasterIo():
     """ Compare two sources of information about a flood """
 
-    def __init__(self, truth_raster, comparison_raster, region_of_interest_albers, result_raster):
+    def __init__(self, truth_raster, comparison_raster, region_of_interest_albers, result_raster, include_all_pixels_as_error=True):
         self.truth_raster = truth_raster
         self.comparison_raster = comparison_raster
         self.result_raster = result_raster
         self.region_of_interest_albers = region_of_interest_albers
+        self.include_all_pixels_as_error = include_all_pixels_as_error
 
     def __str__(self):
         return "compare {0} to {1} and produce {2}".format(self.truth_raster, self.comparison_raster, self.result_raster)
@@ -32,7 +33,7 @@ class CompareFloodRastersRasterIo():
                 1, masked=True, window=window)
 
         with rasterio.open(self.truth_raster) as src_mga:
-            with WarpedVRT(src_mga, crs='EPSG:3577', resampling=Resampling.bilinear,
+            with WarpedVRT(src_mga, crs='EPSG:3577', resampling=Resampling.nearest,
                            transform=self.comp_transform, width=self.comparison.shape[1], height=self.comparison.shape[0]) as vrt:
                 window = from_bounds(
                     left, bottom, right, top, vrt.transform)
@@ -51,11 +52,33 @@ class CompareFloodRastersRasterIo():
         # calculate the difference
         # we need to be carefull with no data values
 
-        self.depth_difference = self.truth - self.comparison
-        self.depth_difference[numpy.isnan(self.truth)] = numpy.nan
-        self.depth_difference[numpy.isnan(self.comparison)] = numpy.nan
-        self.depth_difference[self.depth_difference < -10000] = numpy.nan
-        self.depth_difference[self.depth_difference > 10000] = numpy.nan
+        if self.include_all_pixels_as_error:
+            self.truth[self.truth.mask] = numpy.nan
+            self.comparison[self.comparison.mask] = numpy.nan
+
+            self.depth_difference = numpy.full_like(self.truth, numpy.nan)
+            mask1 = numpy.isnan(self.truth) & ~numpy.isnan(self.comparison)
+            dif1 = 0-self.comparison
+            self.depth_difference[mask1] = dif1[mask1]
+            del dif1
+            mask2 = ~numpy.isnan(self.truth) & numpy.isnan(self.comparison)
+            self.depth_difference[mask2] = self.truth[mask2]
+            mask3 = ~numpy.isnan(self.truth) & ~numpy.isnan(self.comparison)
+            dif3 = self.truth - self.comparison
+            self.depth_difference[mask3] = dif3[mask3]
+            del dif3
+
+            fstat_inputs = (~mask1).astype(
+                numpy.int8)+2*(~mask2).astype(numpy.int8)+4*(~mask3).astype(numpy.int8)
+            # self.depth_difference[numpy.isnan(
+            #    self.truth) & numpy.isnan(self.comparison)] = numpy.nan
+        else:
+            self.depth_difference = self.truth - self.comparison
+            self.depth_difference[numpy.isnan(self.truth)] = numpy.nan
+            self.depth_difference[numpy.isnan(self.comparison)] = numpy.nan
+            self.depth_difference[self.depth_difference < -10000] = numpy.nan
+            self.depth_difference[self.depth_difference > 10000] = numpy.nan
+
         # save raster
         logging.info(f"Saving to disk: {self.result_raster}")
         with rasterio.open(
@@ -72,5 +95,24 @@ class CompareFloodRastersRasterIo():
                 resampling='average',
                 overview_resampling='average') as dst:
             dst.write(self.depth_difference, indexes=1)
+
+        if self.include_all_pixels_as_error:
+            self.fstat_input_raster = self.result_raster.replace(
+                ".tif", "_fstat_in.tif")
+            logging.info(f"Saving to disk: {self.fstat_input_raster}")
+            with rasterio.open(
+                    self.fstat_input_raster, 'w',
+                    driver='COG',
+                    compress='LZW',
+                    dtype=rasterio.int8,
+                    count=1,
+                    crs='EPSG:3577',
+                    nodata=numpy.nan,
+                    transform=self.comp_transform,
+                    width=self.comparison.shape[1],
+                    height=self.comparison.shape[0],
+                    resampling='average',
+                    overview_resampling='average') as dst:
+                dst.write(fstat_inputs, indexes=1)
 
     __repr__ = __str__

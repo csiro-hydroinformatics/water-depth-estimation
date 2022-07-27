@@ -5,6 +5,7 @@ from hydrological_connectivity.definitions.definitions_generator import Definiti
 from hydrological_connectivity.processing.compare_flood_rasters_rasterio import CompareFloodRastersRasterIo
 from hydrological_connectivity.processing.produce_stats import ProduceStats
 import logging
+import os
 
 
 class ModelResultAggregator():
@@ -14,7 +15,8 @@ class ModelResultAggregator():
         self.definition = definition
         self.model_type = model_type
 
-        self.by_elev = ['LBS - Culgoa FP South',
+        if os.environ['COMPARE_BY_ELEVATION'] == 'TRUE':
+            self.by_elev = ['LBS - Culgoa FP South',
                         'LBS - Culgoa FP North',
                         'LBS - Narran River',
                         'LBS - St George',
@@ -26,6 +28,8 @@ class ModelResultAggregator():
                         'Namoi - Merah North',
                         'Namoi - Boolcarroll'
                         ]
+        else:
+            self.by_elev = []
 
         self.prepare_stats()
         logging.debug(

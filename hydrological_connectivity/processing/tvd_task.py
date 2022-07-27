@@ -198,10 +198,23 @@ class TvdTask():
         logging.info("Open Flood Extent")
 
         with rasterio.open(self.tvd_outputs.flood_extent_path) as src_wgs84:
-            with WarpedVRT(src_wgs84, crs='EPSG:3577', resampling=Resampling.bilinear, transform=self.dem_transform, width=self.dem.shape[1], height=self.dem.shape[0]) as vrt:
+            with WarpedVRT(src_wgs84, crs='EPSG:3577', resampling=Resampling.nearest, transform=self.dem_transform, width=self.dem.shape[1], height=self.dem.shape[0]) as vrt:
                 window = from_bounds(
                     left, bottom, right, top, vrt.transform)
                 self.flood_extent = vrt.read(1, window=window)
+
+        # WORKAROUND FOR floating point arithmetic issue in Narran - extend window by a pixel
+        if self.dem.shape != self.flood_extent.shape:
+            logging.info(
+                f"Shape mismatch (probably rounding error): expecting: {self.dem.shape} got {self.flood_extent.shape}")
+            with rasterio.open(self.tvd_outputs.flood_extent_path) as src_wgs84:
+                with WarpedVRT(src_wgs84, crs='EPSG:3577', resampling=Resampling.nearest, transform=self.dem_transform, width=self.dem.shape[1]+1, height=self.dem.shape[0]) as vrt:
+                    window = from_bounds(
+                        left, bottom, right+5, top, vrt.transform)
+                    self.flood_extent = numpy.ma.asarray(
+                        vrt.read(1, window=window).astype(numpy.int8))  # src.read(1)
+            del src_wgs84
+            logging.info(f"New shape {self.flood_extent.shape}")
 
         self.out_mask = self.flood_extent != self.WOfS_wet_value
         wet = numpy.where(self.flood_extent == self.WOfS_wet_value, 1, 0)

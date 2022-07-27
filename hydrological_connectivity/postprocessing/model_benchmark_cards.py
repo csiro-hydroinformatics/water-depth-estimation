@@ -10,6 +10,7 @@ from rasterio.plot import show
 import os.path
 import logging
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_squared_log_error
+import cmcrameri.cm as cmc
 
 
 class ModelBenchmarkCards():
@@ -158,6 +159,19 @@ class ModelBenchmarkCards():
         if len(truth) == 0:
             return comparison_stats
         try:
+            comparison_stats['reference_samples'] = numpy.sum(truth != 0.0)
+        except:
+            logging.exception(
+                f"Could not produce reference_samples for {prod_desc}")
+
+        try:
+            comparison_stats['prediction_samples'] = numpy.sum(
+                prediction != 0.0)
+        except:
+            logging.exception(
+                f"Could not produce prediction_samples for {prod_desc}")
+
+        try:
             comparison_stats['mean_squared_error'] = mean_squared_error(
                 truth, prediction)
         except:
@@ -231,9 +245,22 @@ class ModelBenchmarkCards():
                 f"Prediction for {prod_desc} min {numpy.min(predicted_depth)}, mean {numpy.mean(predicted_depth)}, max {numpy.max(predicted_depth)}, percentiles {numpy.percentile(predicted_depth, [2.5, 15.9, 25, 50, 75, 84.1, 97.5])}")
 
             logging.info(
-                f"Truth for {prod_desc} min {numpy.min(truth_copy)}, mean {numpy.mean(truth_copy)}, max {numpy.max(truth_copy)}, percentiles {numpy.percentile(truth_copy, [2.5, 15.9, 25, 50, 75, 84.1, 97.5])}")
+                f"Benchmark for {prod_desc} min {numpy.min(truth_copy)}, mean {numpy.mean(truth_copy)}, max {numpy.max(truth_copy)}, percentiles {numpy.percentile(truth_copy, [2.5, 15.9, 25, 50, 75, 84.1, 97.5])}")
 
             performance_metrics = {}
+
+            try:
+                fstat_in = task["stats"].fstat
+                # Area common (Aop)
+                Aop = numpy.sum(fstat_in == 3)
+                # Area observed by the reference model (Ao)
+                Ao = Aop + numpy.sum(fstat_in == 6)
+                # Area of modeled inundation area (Ap)
+                Ap = Aop + numpy.sum(fstat_in == 5)
+                performance_metrics['fstat'] = Aop/(Ao + Ap - Aop)
+            except:
+                logging.exception(
+                    f"Could not produce all metrics for {prod_desc}")
 
             try:
                 performance_metrics['all'] = self.run_stats(
@@ -331,7 +358,8 @@ class ModelBenchmarkCards():
         fig, axes_list = pyplot.subplots(
             nrows=7, ncols=4, figsize=(8.3-1, 11.7-1), dpi=300)
 
-        cmap = pyplot.get_cmap('RdYlBu')
+        cmap = cmc.roma
+        # cmap = pyplot.get_cmap('RdYlBu')
 
         for index in range(0, len(self.display_order)):
             i = self.display_order[index]
@@ -368,7 +396,8 @@ class ModelBenchmarkCards():
 
         # show(task["stats"].comparison)
         seaborn.set_theme(style="whitegrid")
-        cmap = pyplot.get_cmap('RdYlBu')
+        cmap = cmc.roma
+        #cmap = pyplot.get_cmap('RdYlBu')
 
         fig, ax = pyplot.subplots(
             nrows=1, ncols=1, figsize=(8.3-1, 11.7-1), dpi=300)

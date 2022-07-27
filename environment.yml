@@ -21,11 +21,13 @@ dependencies:
   - scipy
   - seaborn
   - shapely
+  - simpledbf
   - typing
   - pip
   - pip:
     - -r requirements.txt
     - bomwater
-    - pysheds
+    - pysheds==0.2.7
     - scikits.bootstrap
+    - cmcrameri
  

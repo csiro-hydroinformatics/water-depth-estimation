@@ -13,6 +13,7 @@ import rasterio.mask
 import rasterio.warp
 from rasterio.windows import from_bounds
 from scipy import interpolate
+from scipy.ndimage import gaussian_filter
 
 
 class FwdetTask():
@@ -24,6 +25,10 @@ class FwdetTask():
         self.WOfS_wet_value = 3
 
         self.fwdet_outputs = fwdet_outputs
+        if "FWDET_INTERP_METHOD" in os.environ:
+            self.method = os.environ["FWDET_INTERP_METHOD"]
+        else:
+            self.method = ""
 
     def execute(self):
         self.read_dem()
@@ -48,12 +53,25 @@ class FwdetTask():
         logging.info("Open Flood Extent")
 
         with rasterio.open(self.fwdet_outputs.flood_extent_path) as src_wgs84:
-            with WarpedVRT(src_wgs84, crs='EPSG:3577', resampling=Resampling.bilinear, transform=self.dem_transform, width=self.dem.shape[1], height=self.dem.shape[0]) as vrt:
+            with WarpedVRT(src_wgs84, crs='EPSG:3577', resampling=Resampling.nearest, transform=self.dem_transform, width=self.dem.shape[1], height=self.dem.shape[0]) as vrt:
                 window = from_bounds(
                     left, bottom, right, top, vrt.transform)
                 self.flood_extent = numpy.ma.asarray(
                     vrt.read(1, window=window).astype(numpy.int8))  # src.read(1)
         del src_wgs84
+
+        # WORKAROUND FOR floating point arithmetic issue in Narran - extend window by a pixel
+        if self.dem.shape != self.flood_extent.shape:
+            logging.info(
+                f"Shape mismatch (probably rounding error): expecting: {self.dem.shape} got {self.flood_extent.shape}")
+            with rasterio.open(self.fwdet_outputs.flood_extent_path) as src_wgs84:
+                with WarpedVRT(src_wgs84, crs='EPSG:3577', resampling=Resampling.nearest, transform=self.dem_transform, width=self.dem.shape[1]+1, height=self.dem.shape[0]) as vrt:
+                    window = from_bounds(
+                        left, bottom, right+5, top, vrt.transform)
+                    self.flood_extent = numpy.ma.asarray(
+                        vrt.read(1, window=window).astype(numpy.int8))  # src.read(1)
+            del src_wgs84
+            logging.info(f"New shape {self.flood_extent.shape}")
 
         not_wet = numpy.where(self.flood_extent == self.WOfS_dry_value, 1, 0)
         nodata = numpy.where(self.flood_extent == self.WOfS_nodata_value, 1, 0)
@@ -95,8 +113,27 @@ class FwdetTask():
         y1 = yy[~dem_extract.mask]
         newarr = dem_extract[~dem_extract.mask]
         del dem_extract
-        GD1 = interpolate.griddata((x1, y1), newarr.ravel(),
-                                   (xx, yy), method='linear', fill_value=numpy.nan)
+
+        if self.method == "SMOOTHING":
+            GD_nearest = interpolate.griddata((x1, y1), newarr.ravel(),
+                                              (xx, yy), method='nearest', fill_value=numpy.nan)
+            # Apply a low pass filter
+            GD1 = gaussian_filter(GD_nearest, sigma=1)
+            # For radius - see https://stackoverflow.com/questions/25216382/gaussian-filter-in-scipy
+            # Set sigma/truncate - this default setting would give width of 9 (truncate=4)
+            logging.info("Using nearest plus smoothing")
+        elif self.method == "RIMFIM":
+            # Also try linear trend removal then kriging
+            # use lstsq(A,b) from scipy.linalg import lstsq
+            # then https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.lstsq.html
+            # https://scikit-learn.org/stable/modules/gaussian_process.html#gaussian-process-regression-gpr
+            # import sklearn
+            # gp = sklearn.gaussian_process.GaussianProcessRegressor(kernel=your_chosen_kernel)
+            # gp.fit(X, y)
+            logging.exception(f"Have not implemented RIMFIM method")
+        else:
+            GD1 = interpolate.griddata((x1, y1), newarr.ravel(),
+                                       (xx, yy), method='linear', fill_value=numpy.nan)
         # clean memory for next steps
         del newarr, x, y, xx, yy, x1, y1
         print("--- Interpolation %s seconds ---" % (time.time() - start_time))
@@ -151,3 +188,40 @@ class FwdetTask():
                 resampling='average',
                 overview_resampling='average') as dst:
             dst.write(self.water_depth, indexes=1)
+
+    def save_input_to_disk(self):
+        waterdepth_path = self.fwdet_outputs.output_path.replace(
+            ".tif", "_input_flood_map.tif")
+        logging.info(f"Saving to disk: {waterdepth_path}")
+        with rasterio.open(
+                waterdepth_path, 'w',
+                driver='COG',
+                compress='LZW',
+                dtype=self.flood_extent.dtype,
+                count=1,
+                crs='EPSG:3577',
+                nodata=numpy.nan,
+                transform=self.dem_transform,
+                width=self.flood_extent.shape[1],
+                height=self.flood_extent.shape[0],
+                resampling='average',
+                overview_resampling='average') as dst:
+            dst.write(self.flood_extent, indexes=1)
+
+        waterdepth_path = self.fwdet_outputs.output_path.replace(
+            ".tif", "_input_elev.tif")
+        logging.info(f"Saving to disk: {waterdepth_path}")
+        with rasterio.open(
+                waterdepth_path, 'w',
+                driver='COG',
+                compress='LZW',
+                dtype=self.dem.dtype,
+                count=1,
+                crs='EPSG:3577',
+                nodata=numpy.nan,
+                transform=self.dem_transform,
+                width=self.dem.shape[1],
+                height=self.dem.shape[0],
+                resampling='average',
+                overview_resampling='average') as dst:
+            dst.write(self.dem, indexes=1)

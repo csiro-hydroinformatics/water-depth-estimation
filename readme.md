@@ -17,7 +17,7 @@ CSIRO/GPL v3 see LICENSE & gpl-3.0.txt
 
 ## Getting Started
 
-The notebooks folder contains example logic for TVD, HANDS, etc. flood modelling. There are simple demonstration notebooks for each of the algorithms.
+The notebooks folder contains example logic for TVD, HAND, etc. flood models. There are simple demonstration notebooks for each of the algorithms.
 
 | Notebook | Description |
 |---|---|
@@ -30,32 +30,25 @@ The notebooks folder also contains logic for comparing various flood models to o
 
 Notebooks to run in order are:
 
-1. [calculate_spot_heights.ipynb](./notebooks/calculate_spot_heights.ipynb) - Establishes levels
-1. [compare_hydraulic_model.ipynb](./notebooks/compare_hydraulic_model.ipynb) - Runs models and compares outputs with hydraulic outputs
-1. [generate_report_data.ipynb](./notebooks/generate_report_data.ipynb) - Produces aggregated results
-
-| Notebook | Description |
-|---|---|
-| calculate_spot_heights | Extract from hydraulic model levels at upstream and downstream points in reach *not needed if hand levels have already been defined (this should be run first)|
-| compare_hydraulic_model | Compare all the hydraulic model/rs models and produce output grids (this should be run second) |
-| generate_report_data | Analyse output grids from comparison and produce statistics for reports |
-| generate_reports | Generate reports for the comparison data set | 
-| generate_individual_reports | Generate detailed reports on the combined statistics for a model |
+1. [calculate_spot_heights.ipynb](./notebooks/calculate_spot_heights.ipynb) - Establishes HAND levels: Extract from hydraulic model levels at upstream and downstream points in reach *not needed if hand levels have already been defined
+2. [compare_hydraulic_model.ipynb](./notebooks/compare_hydraulic_model.ipynb) - Runs models and compares outputs with hydraulic model outputs
+3. [generate_report_data.ipynb](./notebooks/generate_report_data.ipynb) - Produces aggregated results: Analyse output grids from comparison and produce statistics for reports
+4. [generate_reports.ipynb](./notebooks/generate_reports.ipynb) - Generates reports for the comparison data set
+5. [generate_individual_reports.ipynb](./notebooks/generate_individual_reports.ipynb) - Generate detailed reports on the combined statistics for a model
 
 ## Jupyter Lab setup
 
 ### Jupyter Lab
 
-If not already installed you will require [Jupyter Lab](https://jupyterlab.readthedocs.io/en/stable/)
+If it has not already been installed you will require [Jupyter Lab](https://jupyterlab.readthedocs.io/en/stable/)
 
 ### Environment setup
+When comparing large high resolution datasets numpy can consume reasonable amounts of memory. 32GB of RAM was sufficient when comparing two floodplain products on a 5m resolution grid for a 60km long stretch of floodplain.
 
 ### Prerequisites
-Does your computer has `conda` installed and available from a command prompt (check with `where conda` on windows and `which conda` on Linux). Update it if need too. ```conda update --all ``` and ```conda update -n base -c defaults conda```
+Does your computer have `conda` installed and available from a command prompt (check with `where conda` on windows and `which conda` on Linux)? Update it if you need to. ```conda update --all ``` and ```conda update -n base -c defaults conda```
 
-Ensure that conda is in the path.
-
-For me, I installed anaconda3 into ```C:\Anaconda3```. Therefore you need to add ```C:\Anaconda3``` as well as ```C:\Anaconda3\Scripts\``` to your path variable, e.g. ```set PATH=%PATH%;C:\Anaconda3;C:\Anaconda3\Scripts\```.
+Ensure that conda is in the path. For instance, if you installed anaconda3 into ```C:\Anaconda3```, you will need to add ```C:\Anaconda3``` as well as ```C:\Anaconda3\Scripts\``` to your path variable, e.g. ```set PATH=%PATH%;C:\Anaconda3;C:\Anaconda3\Scripts\```.
 
 ### Env Setup
 - ```init_refresh_env.bat``` file is used to initialise the environment and refresh it if packages are added.  

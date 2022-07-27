@@ -30,6 +30,7 @@ class DefinitionsGenerator():
         self.elevation_location = {}
 
         self.water_observations = WaterObservations({})
+        self.mim_observations = WaterObservations({})
         self.get_peak_events()
         self.output_path_root = os.environ['OUTPUT_FOLDER_ROOT'].replace(
             "{", "{{").replace("}", "}}")
@@ -109,7 +110,7 @@ class DefinitionsGenerator():
                     '[^a-zA-Z]+', '_', location[0:20]))
 
                 output_path = self.output_path_root + \
-                    f'{os.path.sep}simple{os.path.sep}simple_{0}.tif'
+                    f'{os.path.sep}simple{os.path.sep}simple_{{0}}.tif'
                 self.simple_outputs.append(SimpleOutputs(
                     f"{short_location_label} - {presentation_date}",
                     closest_date,

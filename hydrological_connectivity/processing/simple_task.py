@@ -50,7 +50,7 @@ class SimpleTask():
         logging.info("Open Flood Extent")
 
         with rasterio.open(self.simple_outputs.flood_extent_path) as src_wgs84:
-            with WarpedVRT(src_wgs84, crs='EPSG:3577', resampling=Resampling.bilinear, transform=self.dem_transform, width=self.dem.shape[1], height=self.dem.shape[0]) as vrt:
+            with WarpedVRT(src_wgs84, crs='EPSG:3577', resampling=Resampling.nearest, transform=self.dem_transform, width=self.dem.shape[1], height=self.dem.shape[0]) as vrt:
                 window = from_bounds(
                     left, bottom, right, top, vrt.transform)
                 self.flood_extent = vrt.read(1, window=window)

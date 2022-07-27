@@ -5,6 +5,7 @@ from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
 from rasterio.windows import from_bounds
+import re
 
 
 class ProduceStats():
@@ -23,6 +24,16 @@ class ProduceStats():
     def execute(self):
         left, bottom, right, top = self.region_of_interest_albers.bounds
         logging.info("Open Flood Extent")
+
+        fstat_input_filename = re.sub(
+            "(_elev)?(?P<num>_[0-9]+)?.tif", "\\g<num>_fstat_in.tif", self.comparison_raster)
+
+        with rasterio.open(fstat_input_filename) as src_fstat:
+            window = from_bounds(
+                left, bottom, right, top, src_fstat.transform)
+            logging.info(f'{window}')
+            self.fstat = src_fstat.read(
+                1, window=window)
 
         with rasterio.open(self.comparison_raster) as src_comparison:
             window = from_bounds(
@@ -43,6 +54,8 @@ class ProduceStats():
         # we have "comparison" raster (the r/s model output)
         # calculate the difference
         # we need to be carefull with no data values
+
+        self.fstat[zone != self.segment_number] = 7
 
         self.comparison.mask[(zone == self.segment_number)
                              & ~self.comparison.mask] = False

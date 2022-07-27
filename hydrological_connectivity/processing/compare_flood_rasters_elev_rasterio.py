@@ -10,12 +10,13 @@ from rasterio.windows import from_bounds
 class CompareFloodRastersElevRasterIo():
     """ Compare two sources of information about a flood """
 
-    def __init__(self, truth_raster_elev, comparison_raster_depth, elevation_raster, region_of_interest_albers, result_raster):
+    def __init__(self, truth_raster_elev, comparison_raster_depth, elevation_raster, region_of_interest_albers, result_raster, include_all_pixels_as_error=True):
         self.truth_raster = truth_raster_elev
         self.comparison_raster = comparison_raster_depth
         self.elevation_raster = elevation_raster
         self.result_raster = result_raster
         self.region_of_interest_albers = region_of_interest_albers
+        self.include_all_pixels_as_error = include_all_pixels_as_error
 
     def __str__(self):
         return "compare {0} to {1} and produce {2}".format(self.truth_raster, self.comparison_raster, self.result_raster)
@@ -64,15 +65,31 @@ class CompareFloodRastersElevRasterIo():
         # we have "comparison" raster (the r/s model output)
         # calculate the difference
         # we need to be carefull with no data values
+        if self.include_all_pixels_as_error:
+            self.truth[self.truth.mask | dem.mask] = numpy.nan
+            self.comparison[self.comparison.mask] = numpy.nan
 
-        self.depth_difference = self.truth - (dem + self.comparison)
-        # breakpoint()
-        self.depth_difference[numpy.isnan(self.truth)] = numpy.nan
-        self.depth_difference[numpy.isnan(self.comparison)] = numpy.nan
-        self.depth_difference[numpy.isnan(dem)] = numpy.nan
-        self.depth_difference[self.depth_difference < -10000] = numpy.nan
-        self.depth_difference[self.depth_difference > 10000] = numpy.nan
-        self.depth_difference = self.depth_difference.filled(numpy.nan)
+            self.depth_difference = numpy.full_like(self.truth, numpy.nan)
+
+            mask1 = numpy.isnan(self.truth) & ~numpy.isnan(self.comparison)
+            dif1 = 0-self.comparison
+            self.depth_difference[mask1] = dif1[mask1]
+            del dif1
+            mask2 = ~numpy.isnan(self.truth) & numpy.isnan(self.comparison)
+            self.depth_difference[mask2] = self.truth[mask2] - dem[mask2]
+            mask3 = ~numpy.isnan(self.truth) & ~numpy.isnan(self.comparison)
+            dif3 = self.truth - (dem + self.comparison)
+            self.depth_difference[mask3] = dif3[mask3]
+            del dif3
+        else:
+            self.depth_difference = self.truth - (dem + self.comparison)
+            self.depth_difference[numpy.isnan(self.truth)] = numpy.nan
+            self.depth_difference[numpy.isnan(self.comparison)] = numpy.nan
+            self.depth_difference[numpy.isnan(dem)] = numpy.nan
+            self.depth_difference[self.depth_difference < -10000] = numpy.nan
+            self.depth_difference[self.depth_difference > 10000] = numpy.nan
+            self.depth_difference = self.depth_difference.filled(numpy.nan)
+
         # save raster
         logging.info(f"Saving to disk: {self.result_raster}")
         with rasterio.open(
