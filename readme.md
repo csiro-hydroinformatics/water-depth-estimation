@@ -36,7 +36,7 @@ Notebooks to run in order are:
 4. [generate_reports.ipynb](./notebooks/generate_reports.ipynb) - Generates reports for the comparison data set
 5. [generate_individual_reports.ipynb](./notebooks/generate_individual_reports.ipynb) - Generate detailed reports on the combined statistics for a model
 
-You can either use a [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/csiro-hydroinformatics/water-depth-estimation/HEAD) hosted lab or build it yourself (see below detials for self hosting).  Please note that the environment utilises many additional packages which will need to be downloaded and installed.  The build process will take sometime to complete and issue may arise over time as packages change version and unfortunately no longer work together.
+You can either click this button [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/csiro-hydroinformatics/water-depth-estimation/HEAD) which launches a hosted lab or build it yourself (see below detials for self hosting).  Please note that the environment utilises many additional packages which will be downloaded and installed.  The build process will take sometime to complete and issues may arise over time as packages change version and unfortunately no longer work together.
 
 ## Jupyter Lab setup
 
