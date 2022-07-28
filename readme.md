@@ -1,5 +1,3 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/csiro-hydroinformatics/water-depth-estimation/HEAD?labpath=Getting_Started.ipynb)
-
 # Water depth estimation
 
 We undertook detailed analysis of three methods for estimating flood water depth from satellite derived water extent and digital terrain model. The results were validated against hydrodynamic modelling results from 11 river reaches in three Australian regions. This work provides a guideline for future studies that enhance remote sensing-based flood maps with water depth, making use of the growing number of publicly available remote sensing water extent and digital terrain datasets globally. 
@@ -15,5 +13,5 @@ Caveats:
 # License
 CSIRO/GPL v3 see LICENSE & gpl-3.0.txt
 
-Please visit our [getting started notebook](Getting_Started.ipynb) for further information and use.
+Please visit our [getting started notebook](Getting_Started.ipynb) for further information and use. Or you can launch a [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/csiro-hydroinformatics/water-depth-estimation/main?urlpath=lab/tree/Getting_Started.ipynb) environment to explore the code
 
