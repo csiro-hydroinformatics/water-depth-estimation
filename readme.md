@@ -1,4 +1,4 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/csiro-hydroinformatics/water-depth-estimation/HEAD?labpath=https%3A%2F%2Fgithub.com%2Fcsiro-hydroinformatics%2Fwater-depth-estimation%2Fblob%2Fmain%2FGetting_Started.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/csiro-hydroinformatics/water-depth-estimation/HEAD?labpath=Getting_Started.ipynb)
 
 # Water depth estimation
 
