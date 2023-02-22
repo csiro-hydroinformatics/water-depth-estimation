@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mdb_fwdet"
+version = "1.0.17"
+dependencies = [
+    "cloudpickle",
+    "dask",
+    "distributed",
+    "tornado",
+    "botocore",
+    "numpy",
+    "scipy",
+    "pandas",
+    "datacube",
+    "scikit-learn",
+    "xarray",
+    "rioxarray",
+    "dask-image",
+    "boto3",
+    "s3fs",
+    "dask-gateway",
+    "zarr",
+    "pytz"
+]

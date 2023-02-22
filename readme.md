@@ -10,6 +10,14 @@ Caveats:
 * A subset of toy data is provided for learning purposes
 * This code has been revised locally based on reviewer comments, and will be updated once local filepaths have been stripped (etc.)
 
+# Murray Darling Basin water depth code
+We have developed a two-monthly flood water depth product using FwDET for the Murray Darling 
+Basin (MDB), Australia (see https://data.csiro.au/collection/csiro:50243). The code is in the 
+[mdb_fwdet](mdb_fwdet/README.md) folder.
+
+A demonstration of how to analyse the two-monthly flood water depth product is provided 
+in the notebook [example_water_depth.ipynb](notebooks/example_water_depth.ipynb).
+
 # License
 CSIRO/GPL v3 see LICENSE & gpl-3.0.txt
 
