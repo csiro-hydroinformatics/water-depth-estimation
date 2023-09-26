@@ -30,7 +30,12 @@ jobs:
       - name: Build the JupyterLite site
         shell: bash -l {0}
         run: |
-          cp README.md notebooks
+          echo "$PWD"
+          search_dir="$PWD"
+          for entry in "$search_dir"/*
+          do
+            echo "$entry"
+          done
           jupyter lite build --contents notebooks --output-dir dist
 
       - name: Upload artifact
