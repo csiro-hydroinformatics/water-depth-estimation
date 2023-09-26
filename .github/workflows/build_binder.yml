@@ -1,16 +1,17 @@
-name: 'Trigger Binder build'
+# name: 'Trigger Binder build'
 
-on:
-  push:
-    branches: 
-        - main
-        - feature/**
+# on:
+#   push:
+#     branches: 
+#         - main
+#         - feature/**
 
-jobs:
-  trigger-binder-build:
-    runs-on: [ubuntu-latest]
-    steps:
-      - uses: jupyterhub/repo2docker-action@master
-        with:
-          NO_PUSH: true
-          MYBINDERORG_TAG: ${{ github.event.ref }}
+# jobs:
+#   trigger-binder-build:
+#     runs-on: [ubuntu-latest]
+#     steps:
+#       - uses: jupyterhub/repo2docker-action@master
+#         with:
+#           NO_PUSH: true
+#           MYBINDERORG_TAG: ${{ github.event.ref }}
+
