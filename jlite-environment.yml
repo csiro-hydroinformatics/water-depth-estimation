@@ -1,0 +1,32 @@
+name: Hydrocon-env
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - pip
+  - jupyter_server
+  - jupyterlite-core >=0.1.0,<0.2.0
+  - jupyterlite-xeus-python >=0.9.2,<0.10.0
+  - python-dotenv
+  - gdal
+  - geopandas
+  - matplotlib
+  - numpy
+  - pandas
+  - pathlib
+  - pyproj
+  - pytz
+  - rasterio
+  - scikit-learn
+  - scipy
+  - seaborn
+  - shapely
+  - typing
+  - pip
+  - pip:
+    - -r requirements.txt
+    - bomwater
+    - simpledbf
+    - pysheds==0.2.7
+    - scikits.bootstrap
+    - cmcrameri
